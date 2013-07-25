@@ -1,4 +1,12 @@
-all: git-bz.html git-bz.1
+include Makefile.inc
+
+ifeq ($(enable_documentation),yes)
+docs = git-bz.html git-bz.1
+else
+docs =
+endif
+
+all: $(docs)
 
 %.xml: %.txt
 	asciidoc -f asciidoc.conf -d manpage -b docbook $<
@@ -16,3 +24,13 @@ upload-html: git-bz.html
 
 clean:
 	rm -f git-bz.xml git-bz.html git-bz.1
+
+install: install-bin $(if $(findstring yes,$(enable_documentation)),install-doc)
+
+install-bin:
+	mkdir -p $(DESTDIR)$(bindir)
+	install -m 0755 $(srcdir)/git-bz $(DESTDIR)$(bindir)
+
+install-doc:
+	mkdir -p $(DESTDIR)$(mandir)/man1
+	install -m 0644 git-bz.1 $(DESTDIR)$(mandir)/man1
