@@ -1,4 +1,5 @@
 include Makefile.inc
+VPATH=$(srcdir)
 
 ifeq ($(enable_documentation),yes)
 docs = git-bz.html git-bz.1
@@ -9,10 +10,10 @@ endif
 all: $(docs)
 
 %.xml: %.txt
-	asciidoc -f asciidoc.conf -d manpage -b docbook $<
+	asciidoc -f $(srcdir)/asciidoc.conf -d manpage -b docbook -o $@ $<
 
 %.html: %.txt
-	asciidoc -f asciidoc.conf -d manpage $<
+	asciidoc -f $(srcdir)/asciidoc.conf -d manpage -o $@ $<
 
 %.1: %.xml
 	xmlto man $<
