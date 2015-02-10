@@ -1244,6 +1244,25 @@ class Bug(object):
         print "Bug %d - %s" % (self.id, short_desc)
         print self.get_url()
 
+    def _get_attachment_csrf_token(self):
+        url = '/attachment.cgi'
+        url += '?bugid=%s&action=enter' % str(self.id)
+        response = self.server.send_request("GET", url)
+        if response.status != 200:
+            # Not dying here, there is a chance that bugzilla is not doing
+            # CSRF for attachments in the version you are trying to use
+            return ''
+
+        # Trying to match something like this:
+        # <input type="hidden" name="token" value="A1Ph4nuM3r1c">
+        r = re.compile(r'.*<input.*?name="token".*?value="(.+?)".*?>', re.DOTALL)
+        data = response.read()
+        x = r.search(data)
+        if x:
+            return x.groups()[0]
+
+        return ''
+
     def create_patch(self, description, comment, filename, data, obsoletes=[], status='none'):
         fields = {}
         fields['bugid'] = str(self.id)
@@ -1257,6 +1276,7 @@ class Bug(object):
             # this will produce multiple parts in the encoded data with the
             # name 'obsolete' for each item in the list
             fields['obsolete'] = map(str, obsoletes)
+        fields['token'] = self._get_attachment_csrf_token()
 
         files = { 'data': (filename, 'text/plain; charset=UTF-8', data) }
 
